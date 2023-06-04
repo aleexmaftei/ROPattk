@@ -9,14 +9,19 @@ from rop_src.services.capstoneConstants import CapstonePossibleArchitectures, Ca
 class FileService(object):
     def __init__(self):
         self._file = None
+        self._architectureClass = None
 
     def deleteFile(self):
         del self._file
         self._file = None
 
+    @property
+    def architectureClass(self):
+        return self._architectureClass
+
     def addFile(self, filePath, architecture: int, mode: int, endianness: int):
-        architectureClass = getArchitecture(architecture, mode, endianness)
-        self.file = BaseLoader.loadFileByArchitecture(filePath, architectureClass)
+        self._architectureClass = getArchitecture(architecture, mode, endianness)
+        self.file = BaseLoader.loadFileByArchitecture(filePath, self._architectureClass)
 
     def isFileLoaded(self):
         return self.file is not None

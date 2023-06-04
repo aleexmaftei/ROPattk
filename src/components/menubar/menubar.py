@@ -4,9 +4,10 @@ from rop_src.services.file_service import FileService
 from rop_src.services.gadget_service import GadgetService
 import os
 
+from src.common.globalEventHandler import GlobalEventHandlerObject
+
 
 class Menubar:
-
     def _openFile(self):
         file = QFileDialog.getOpenFileName()
         path = file[0]
@@ -14,6 +15,8 @@ class Menubar:
         FileService.addFile(path, arch, mode, endianness)
         gadgets = GadgetService.loadGadgets()
         FileService.writeGadgetsToFile(gadgets, f"{os.getcwd()}/src/resources/instructions.txt")
+
+        GlobalEventHandlerObject.dispatchEventWithParams("readGadgetsFile", FileService.architectureClass.NAME)
 
     def CreateUIMenubar(self, mainWindow: QMainWindow):
         menubar = QtWidgets.QMenuBar(parent=mainWindow)

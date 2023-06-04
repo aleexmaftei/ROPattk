@@ -9,7 +9,12 @@ from src.enums.dataRole import DataRole
 class CreateRegisterTabs:
     def __init__(self):
         self._gadgetWidgetListGroupedByRegister = []
+        self._Registers_Frame = None
 
+    @property
+    def Registers_Frame(self):
+        return self._Registers_Frame
+    
     @property
     def gadgetListGroupedByTabs(self) -> list[QListWidget]:
         return self._gadgetWidgetListGroupedByRegister
@@ -22,30 +27,7 @@ class CreateRegisterTabs:
         for gadgetWidget in self.gadgetListGroupedByTabs:
             gadgetWidget.currentItemChanged.disconnect()
 
-    def CreateUITabsByArchitecture(
-            self,
-            currentSelectedArchitecture: str,
-            frame: QFrame,
-            instructionList: dict[str, list[dict[str, str]]],
-            registersFrameObjectName: str = REGISTERS_TAB_FRAME_OBJECT_NAME,
-            registerWidgetObjectName: str = REGISTERS_TAB_WIDGET_OBJECT_NAME
-    ):
-        # Create the frame where the tabs should reside
-        Registers_Frame = QtWidgets.QFrame(parent=frame)
-        Registers_Frame.setMinimumSize(QtCore.QSize(517, 365))
-        Registers_Frame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        Registers_Frame.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
-        Registers_Frame.setObjectName(registersFrameObjectName)
-
-        # Another vertical frame
-        verticalLayout2 = QtWidgets.QVBoxLayout(Registers_Frame)
-        verticalLayout2.setContentsMargins(0, 0, 0, 0)
-        verticalLayout2.setObjectName("verticalLayout2")
-
-        # Create the widget
-        RegistersTabs_Widget = QtWidgets.QTabWidget(parent=Registers_Frame)
-        RegistersTabs_Widget.setObjectName(registerWidgetObjectName)
-
+    def AddGadgetsToUI(self, instructionList: dict[str, list[dict[str, str]]], currentSelectedArchitecture: str, ):
         RegistersDictionary = ConstRegisters[currentSelectedArchitecture]
         tabIndex = 0
         firstTabEnabled = None
@@ -96,19 +78,44 @@ class CreateRegisterTabs:
             # Add the tab to frames
             listGridLayout.addWidget(list_Widget, 0, 0, 1, 1)
             mainGridLayout.addWidget(list_Frame, 0, 0, 1, 1)
-            RegistersTabs_Widget.addTab(CurrentRegister_Widget, register['name'])
+            self.RegistersTabs_Widget.addTab(CurrentRegister_Widget, register['name'])
 
             if not isRegisterUsed:
-                RegistersTabs_Widget.setTabEnabled(tabIndex, False)
+                self.RegistersTabs_Widget.setTabEnabled(tabIndex, False)
             elif firstTabEnabled is None:
                 firstTabEnabled = tabIndex
 
             tabIndex = tabIndex + 1
 
-        verticalLayout2.addWidget(RegistersTabs_Widget)
+        self.verticalLayout2.addWidget(self.RegistersTabs_Widget)
 
         # Set the first tab as startup index
-        RegistersTabs_Widget.setCurrentIndex(firstTabEnabled)
+        self.RegistersTabs_Widget.setCurrentIndex(firstTabEnabled)
 
-        return Registers_Frame
+    def CreateUITabsByArchitecture(
+            self,
+            currentSelectedArchitecture: str,
+            frame: QFrame,
+            instructionList: dict[str, list[dict[str, str]]],
+            registersFrameObjectName: str = REGISTERS_TAB_FRAME_OBJECT_NAME,
+            registerWidgetObjectName: str = REGISTERS_TAB_WIDGET_OBJECT_NAME
+    ):
+        # Create the frame where the tabs should reside
+        self._Registers_Frame = QtWidgets.QFrame(parent=frame)
+        self._Registers_Frame.setMinimumSize(QtCore.QSize(517, 365))
+        self._Registers_Frame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self._Registers_Frame.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
+        self._Registers_Frame.setObjectName(registersFrameObjectName)
 
+        # Another vertical frame
+        self.verticalLayout2 = QtWidgets.QVBoxLayout(self._Registers_Frame)
+        self.verticalLayout2.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout2.setObjectName("verticalLayout2")
+
+        # Create the widget
+        self.RegistersTabs_Widget = QtWidgets.QTabWidget(parent=self._Registers_Frame)
+        self.RegistersTabs_Widget.setObjectName(registerWidgetObjectName)
+
+        self.AddGadgetsToUI(instructionList, currentSelectedArchitecture)
+
+        return self._Registers_Frame

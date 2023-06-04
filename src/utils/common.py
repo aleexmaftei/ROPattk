@@ -1,3 +1,6 @@
+from PyQt6 import sip
+from PyQt6.QtWidgets import QFrame
+
 from src.common.constRegisterDetails import ConstRegisters
 
 
@@ -22,3 +25,16 @@ def ExtractUsedRegistersFromAssemblyCode(assmString: str, architecture: str) -> 
             usedRegisters.append(registerName)
 
     return usedRegisters
+
+
+def DeleteUILayout(self, layout):
+    if layout is not None:
+        if not isinstance(layout, QFrame):
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.deleteLayout(item.layout())
+        sip.delete(layout)

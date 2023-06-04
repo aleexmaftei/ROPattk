@@ -1,20 +1,44 @@
 import os
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import QMainWindow
+from src.common.globalEventHandler import GlobalEventHandlerObject
 from src.components.gadget_details_tab.gadget_details_tab import CreateGadgetDetailsTab
 from src.components.menubar.menubar import Menubar
+from src.utils.common import DeleteUILayout
 from src.utils.parseFile import ReadFile
 from src.components.register_tabs.register_tabs import CreateRegisterTabs
 
 
 class Ui_MainWindow(object):
-    def __init__(self, MainWindow: QMainWindow, architectureName: str):
-        self._architectureName = architectureName
+    def __init__(self, MainWindow: QMainWindow):
         self.__setupUi(MainWindow)
+        self.createRegisterTabs = None
+        self.createGadgetDetailsTab = None
 
-    @property
-    def architectureName(self):
-        return self._architectureName
+    def __displayRegisterTabsAfterFileWrite(self, architectureName: str):
+        if self.createRegisterTabs is not None:
+            DeleteUILayout(self, self.createRegisterTabs.Registers_Frame)
+
+        if self.createGadgetDetailsTab is not None:
+            DeleteUILayout(self, self.createGadgetDetailsTab.GadgetDetails_Frame)
+
+        # Create register tab window
+        instructionList = ReadFile(f"{os.getcwd()}/src/resources/instructions.txt", architectureName)
+        self.createRegisterTabs = CreateRegisterTabs()
+        Registers_Frame = self.createRegisterTabs.CreateUITabsByArchitecture(
+            currentSelectedArchitecture=architectureName,
+            frame=self.Right_Frame,
+            instructionList=instructionList)
+
+        # Gadget details tab window
+        self.createGadgetDetailsTab = CreateGadgetDetailsTab(currentSelectedArchitecture=architectureName)
+        GadgetDetails_Frame = self.createGadgetDetailsTab.CreateUIGadgetDetails(frame=self.Right_Frame)
+
+        self.createRegisterTabs.setSameEventForEachTab(self.createGadgetDetailsTab.setSelectedGadgetDetails)
+
+        # Add widgets
+        self.verticalLayout.addWidget(Registers_Frame)
+        self.verticalLayout.addWidget(GadgetDetails_Frame)
 
     def __setupUi(self, MainWindow: QMainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -69,22 +93,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName("verticalLayout")
 
-        # Gadget details tab window
-        createGadgetDetailsTab = CreateGadgetDetailsTab(currentSelectedArchitecture=self.architectureName)
-        GadgetDetails_Frame = createGadgetDetailsTab.CreateUIGadgetDetails(frame=self.Right_Frame)
-
-        # Create register tab window
-        instructionList = ReadFile(f"{os.getcwd()}/src/resources/instructions.txt", self.architectureName)
-        createRegisterTabs = CreateRegisterTabs()
-        Registers_Frame = createRegisterTabs.CreateUITabsByArchitecture(
-            currentSelectedArchitecture=self.architectureName,
-            frame=self.Right_Frame,
-            instructionList=instructionList)
-        createRegisterTabs.setSameEventForEachTab(createGadgetDetailsTab.setSelectedGadgetDetails)
-
-        # Add widgets
-        self.verticalLayout.addWidget(Registers_Frame)
-        self.verticalLayout.addWidget(GadgetDetails_Frame)
+        GlobalEventHandlerObject.addEventListener("readGadgetsFile", self.__displayRegisterTabsAfterFileWrite)
 
         self.gridLayout_3.addWidget(self.Right_Frame, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.Central_Widget)

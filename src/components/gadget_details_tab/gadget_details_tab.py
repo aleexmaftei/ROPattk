@@ -9,6 +9,11 @@ from src.utils.common import BeautifyAssemblyCodeFromText, ExtractUsedRegistersF
 class CreateGadgetDetailsTab:
     def __init__(self, currentSelectedArchitecture: str):
         self._currentSelectedArchitecture = currentSelectedArchitecture
+        self._GadgetDetails_Frame = None
+
+    @property
+    def GadgetDetails_Frame(self):
+        return self._GadgetDetails_Frame
 
     def setSelectedGadgetDetails(self, currentItem: QListWidgetItem, oldItem: QListWidgetItem | None):
         newData = currentItem.data(DataRole.UserRole.value)
@@ -210,20 +215,20 @@ class CreateGadgetDetailsTab:
 
     def CreateUIGadgetDetails(self, frame: QFrame):
         # Create the frame where the tabs should reside
-        GadgetDetails_Frame = QtWidgets.QFrame(parent=frame)
-        GadgetDetails_Frame.setMinimumSize(QtCore.QSize(517, 250))
-        GadgetDetails_Frame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        GadgetDetails_Frame.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
-        GadgetDetails_Frame.setObjectName("GadgetDetails_Frame")
+        self._GadgetDetails_Frame = QtWidgets.QFrame(parent=frame)
+        self._GadgetDetails_Frame.setMinimumSize(QtCore.QSize(517, 250))
+        self._GadgetDetails_Frame.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self._GadgetDetails_Frame.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
+        self._GadgetDetails_Frame.setObjectName("GadgetDetails_Frame")
 
         # Another vertical frame
-        verticalLayout2 = QtWidgets.QVBoxLayout(GadgetDetails_Frame)
+        verticalLayout2 = QtWidgets.QVBoxLayout(self._GadgetDetails_Frame)
         verticalLayout2.setContentsMargins(0, 0, 0, 0)
         verticalLayout2.setSpacing(0)
         verticalLayout2.setObjectName("gadgetDetails_verticalLayout2")
 
         # Create the widget
-        GadgetDetailsTabs = QtWidgets.QTabWidget(parent=GadgetDetails_Frame)
+        GadgetDetailsTabs = QtWidgets.QTabWidget(parent=self._GadgetDetails_Frame)
         GadgetDetailsTabs.setObjectName("GadgetDetailsTabs")
 
         # Create the first tab
@@ -236,4 +241,4 @@ class CreateGadgetDetailsTab:
 
         verticalLayout2.addWidget(GadgetDetailsTabs)
 
-        return GadgetDetails_Frame
+        return self._GadgetDetails_Frame
