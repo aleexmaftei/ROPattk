@@ -18,9 +18,11 @@ class Ui_MainWindow(object):
     def __displayRegisterTabsAfterFileWrite(self, architectureName: str):
         if self.createRegisterTabs is not None:
             DeleteUILayout(self, self.createRegisterTabs.Registers_Frame)
+            self.createRegisterTabs = None
 
         if self.createGadgetDetailsTab is not None:
             DeleteUILayout(self, self.createGadgetDetailsTab.GadgetDetails_Frame)
+            self.createGadgetDetailsTab = None
 
         # Create register tab window
         instructionList = ReadFile(f"{os.getcwd()}/src/resources/instructions.txt", architectureName)
