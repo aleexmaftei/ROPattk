@@ -15,14 +15,18 @@ class Ui_MainWindow(object):
         self.createRegisterTabs = None
         self.createGadgetDetailsTab = None
 
-    def __displayRegisterTabsAfterFileWrite(self, architectureName: str):
+    def __removeFile(self):
         if self.createRegisterTabs is not None:
+            self.createRegisterTabs.disconnectAllEvents()
             DeleteUILayout(self, self.createRegisterTabs.Registers_Frame)
             self.createRegisterTabs = None
 
         if self.createGadgetDetailsTab is not None:
             DeleteUILayout(self, self.createGadgetDetailsTab.GadgetDetails_Frame)
             self.createGadgetDetailsTab = None
+
+    def __displayRegisterTabsAfterFileWrite(self, architectureName: str):
+        self.__removeFile()
 
         # Create register tab window
         instructionList = ReadFile(f"{os.getcwd()}/src/resources/instructions.txt", architectureName)
@@ -96,6 +100,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.setObjectName("verticalLayout")
 
         GlobalEventHandlerObject.addEventListener("readGadgetsFile", self.__displayRegisterTabsAfterFileWrite)
+        GlobalEventHandlerObject.addEventListener("removeGadgetsFile", self.__removeFile)
 
         self.gridLayout_3.addWidget(self.Right_Frame, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.Central_Widget)

@@ -18,6 +18,9 @@ class Menubar:
 
         GlobalEventHandlerObject.dispatchEventWithParams("readGadgetsFile", FileService.architectureClass.NAME)
 
+    def _removeFile(self):
+        GlobalEventHandlerObject.dispatchEvent("removeGadgetsFile")
+
     def CreateUIMenubar(self, mainWindow: QMainWindow):
         menubar = QtWidgets.QMenuBar(parent=mainWindow)
         menubar.setGeometry(QtCore.QRect(0, 0, 829, 23))
@@ -36,6 +39,7 @@ class Menubar:
         actionRemove_file = QtGui.QAction(parent=mainWindow)
         actionRemove_file.setObjectName("actionRemove_file")
         actionRemove_file.setText("Remove")  # TODO: translations
+        actionRemove_file.triggered.connect(lambda: self._removeFile())
 
         # Add actions to menubar
         menuMenu.addAction(actionLoad_file)
