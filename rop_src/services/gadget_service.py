@@ -35,7 +35,7 @@ class GadgetService(object):
         offset = section.offset - (binaryContent.imageBase - (section.virtualAddress - section.offset))
 
         cp = capstone.Cs(architecture.architectureType, architecture.architectureMode)
-        vaddrs = set()
+        virtualAddresses = set()
         for ending in architecture.gadgetEndings[gadgetType]:
             # ending = tuple of (ROP_instruction, instruction_alignment)
             offset_tmp = 0
@@ -51,7 +51,6 @@ class GadgetService(object):
 
                 # Check if the instruction is aligned with the architecture
                 if offset_tmp % architecture.instructionAlignment == 0:
-                    # for x in range(arch.align, (depth + 1) * arch.align, arch.align): # This can be used if you want to use a bytecount instead of an instruction count per gadget
                     none_count = 0
 
                     for x in range(0, index + 1, architecture.instructionAlignment):
@@ -63,8 +62,8 @@ class GadgetService(object):
                             if leng > instructionCount:
                                 break
                             gadgetAddress = gadget.getImageBaseForGadget()
-                            if gadgetAddress not in vaddrs:
-                                vaddrs.update([gadgetAddress])
+                            if gadgetAddress not in virtualAddresses:
+                                virtualAddresses.update([gadgetAddress])
                                 toReturn.append(gadget)
                             none_count = 0
                         else:

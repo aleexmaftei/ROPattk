@@ -1,15 +1,21 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
-from PyQt6.QtWidgets import QFrame, QListWidgetItem, QLabel
+from PyQt6.QtWidgets import QFrame, QListWidgetItem
 
 from src.common.constGadgetDetailsTab import ConstGadgetDetailsTabTitle, ConstROPChainTabTitle
 from src.enums.dataRole import DataRole
-from src.utils.common import BeautifyAssemblyCodeFromText, ExtractUsedRegistersFromAssemblyCode
+from src.utils.common import BeautifyAssemblyCodeFromText, ExtractUsedRegistersFromAssemblyCode, DeleteUILayout
+from src.utils.parseFile import WriteToFileDialog
 
 
 class CreateGadgetDetailsTab:
     def __init__(self, currentSelectedArchitecture: str):
         self._currentSelectedArchitecture = currentSelectedArchitecture
         self._GadgetDetails_Frame = None
+        self._listOfSelectedGadgets = []
+        self._currentSelectedGadget = None
+        self.frame_for_buttons = None
+        self.GadgetDetailsTabs = None
+        self.removeGadgetButton = None
 
     @property
     def GadgetDetails_Frame(self):
@@ -17,6 +23,7 @@ class CreateGadgetDetailsTab:
 
     def setSelectedGadgetDetails(self, currentItem: QListWidgetItem, oldItem: QListWidgetItem | None):
         newData = currentItem.data(DataRole.UserRole.value)
+        self._currentSelectedGadget = newData
 
         self.offset_value.setText(newData['offset'])
         self.stack_size_2.setText(str(newData['size']))
@@ -26,6 +33,33 @@ class CreateGadgetDetailsTab:
 
         assemblyCode = BeautifyAssemblyCodeFromText(newData["gadget"])
         self.assembly_code.setText(assemblyCode)
+
+        if self.frame_for_buttons is not None:
+            DeleteUILayout(self, self.frame_for_buttons, False)
+
+            self.removeGadgetButton = QtWidgets.QPushButton(parent=self.frame_simple_details_wrapper)
+            self.removeGadgetButton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+            self.removeGadgetButton.setObjectName("removeGadgetButton")
+            self.removeGadgetButton.setText("Delete gadget")  # TODO: translations
+            self.removeGadgetButton.clicked.connect(lambda x: self.__removeGadgetFromChain())
+            self.frame_for_buttons.addWidget(self.removeGadgetButton)
+
+            addGadgetButton = QtWidgets.QPushButton(parent=self.frame_simple_details_wrapper)
+            addGadgetButton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+            addGadgetButton.setFlat(False)
+            addGadgetButton.setObjectName("addGadgetButton")
+            addGadgetButton.setText("Add gadget")  # TODO: translations
+            addGadgetButton.clicked.connect(lambda x: self.__addGadgetToChain())
+            self.frame_for_buttons.addWidget(addGadgetButton)
+
+            # Disable the Remove button if the gadget is not in the list
+            isAdded = False
+            for selectedGadget in self._listOfSelectedGadgets:
+                if selectedGadget["offset"] == self._currentSelectedGadget["offset"]:
+                    isAdded = True
+                    self.removeGadgetButton.setEnabled(True)
+            if isAdded is False:
+                self.removeGadgetButton.setEnabled(False)
 
     def _createFirstTab(self):
         # Create the first tab
@@ -49,13 +83,13 @@ class CreateGadgetDetailsTab:
         horizontalLayout_4.setObjectName("horizontalLayout_4")
 
         # Frame Wrapper
-        frame_simple_details_wrapper = QtWidgets.QFrame(parent=frame_selected_gadget_details)
-        frame_simple_details_wrapper.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
-        frame_simple_details_wrapper.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
-        frame_simple_details_wrapper.setObjectName("frame_simple_details_wrapper")
-        verticalLayout_3 = QtWidgets.QVBoxLayout(frame_simple_details_wrapper)
+        self.frame_simple_details_wrapper = QtWidgets.QFrame(parent=frame_selected_gadget_details)
+        self.frame_simple_details_wrapper.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.frame_simple_details_wrapper.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
+        self.frame_simple_details_wrapper.setObjectName("frame_simple_details_wrapper")
+        verticalLayout_3 = QtWidgets.QVBoxLayout(self.frame_simple_details_wrapper)
         verticalLayout_3.setObjectName("verticalLayout_3")
-        frame_for_offset = QtWidgets.QFrame(parent=frame_simple_details_wrapper)
+        frame_for_offset = QtWidgets.QFrame(parent=self.frame_simple_details_wrapper)
         font = QtGui.QFont()
         font.setPointSize(11)
         frame_for_offset.setFont(font)
@@ -95,7 +129,7 @@ class CreateGadgetDetailsTab:
         verticalLayout_3.addWidget(frame_for_offset)
 
         # Frame wrapper for used registers
-        frame_for_used_registers = QtWidgets.QFrame(parent=frame_simple_details_wrapper)
+        frame_for_used_registers = QtWidgets.QFrame(parent=self.frame_simple_details_wrapper)
         frame_for_used_registers.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         frame_for_used_registers.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         frame_for_used_registers.setObjectName("frame_for_used_registers")
@@ -133,7 +167,7 @@ class CreateGadgetDetailsTab:
         verticalLayout_3.addWidget(frame_for_used_registers)
 
         # Frame + Label keyword "Stack size"
-        frame_for_stack_size = QtWidgets.QFrame(parent=frame_simple_details_wrapper)
+        frame_for_stack_size = QtWidgets.QFrame(parent=self.frame_simple_details_wrapper)
         frame_for_stack_size.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
         frame_for_stack_size.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
         frame_for_stack_size.setObjectName("frame_for_stack_size")
@@ -164,11 +198,17 @@ class CreateGadgetDetailsTab:
         horizontalLayout_3.addItem(spacerItem2)
         verticalLayout_3.addWidget(frame_for_stack_size)
 
+        # Add/remove buttons frame
+        self.frame_for_buttons = QtWidgets.QHBoxLayout()
+        self.frame_for_buttons.setContentsMargins(-1, 20, -1, -1)
+        self.frame_for_buttons.setObjectName("frame_for_buttons")
+        verticalLayout_3.addLayout(self.frame_for_buttons)
+
         # Spacer
         spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
                                             QtWidgets.QSizePolicy.Policy.Expanding)
         verticalLayout_3.addItem(spacerItem3)
-        horizontalLayout_4.addWidget(frame_simple_details_wrapper)
+        horizontalLayout_4.addWidget(self.frame_simple_details_wrapper)
 
         # Frame with assembly code
         frame_assembly_wrapper = QtWidgets.QFrame(parent=frame_selected_gadget_details)
@@ -206,10 +246,176 @@ class CreateGadgetDetailsTab:
 
         return SelectedGadgetDetails
 
+    def __inputTextChanged(self, uuid, register, x):
+        print(uuid, register, x)
+
+    def __addGadgetToChain(self):
+        if self._currentSelectedGadget is None:
+            return
+
+        if len(self._listOfSelectedGadgets) == 0:
+            self.GadgetDetailsTabs.setTabEnabled(1, True)
+
+        # Enable the Remove button
+        if self.removeGadgetButton is not None:
+            self.removeGadgetButton.setEnabled(True)
+
+        gadgetUuid = self._currentSelectedGadget["gadgetUuid"]
+        self._listOfSelectedGadgets.append(self._currentSelectedGadget)
+
+        gadget = QtWidgets.QWidget(parent=self.gadget_list_wrapper)
+        gadget.setObjectName(f"gadget_{gadgetUuid}")
+
+        verticalLayout = QtWidgets.QVBoxLayout(gadget)
+        verticalLayout.setObjectName(f"verticalLayout_{gadgetUuid}")
+
+        scrollArea_gadget = QtWidgets.QScrollArea(parent=gadget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(scrollArea_gadget.sizePolicy().hasHeightForWidth())
+        scrollArea_gadget.setSizePolicy(sizePolicy)
+        scrollArea_gadget.setMaximumSize(QtCore.QSize(350, 120))
+        scrollArea_gadget.setStyleSheet("margin-bottom: 0;")
+        scrollArea_gadget.setWidgetResizable(True)
+        scrollArea_gadget.setObjectName(f"scrollArea_gadget_{gadgetUuid}")
+        scrollAreaWidgetContents_gadget = QtWidgets.QWidget()
+        scrollAreaWidgetContents_gadget.setGeometry(QtCore.QRect(0, 0, 342, 108))
+        scrollAreaWidgetContents_gadget.setObjectName(f"scrollAreaWidgetContents_gadget_{gadgetUuid}")
+
+        verticalLayout_2 = QtWidgets.QVBoxLayout(scrollAreaWidgetContents_gadget)
+        verticalLayout_2.setObjectName(f"verticalLayout2_{gadgetUuid}")
+
+        assembly_code_gadget = QtWidgets.QLabel(parent=scrollAreaWidgetContents_gadget)
+        assembly_code_gadget.setObjectName(f"assembly_code_gadget_{gadgetUuid}")
+        assembly_code_gadget.setText(BeautifyAssemblyCodeFromText(self._currentSelectedGadget["gadget"]))
+
+        verticalLayout_2.addWidget(assembly_code_gadget)
+        scrollArea_gadget.setWidget(scrollAreaWidgetContents_gadget)
+        verticalLayout.addWidget(scrollArea_gadget)
+
+        index = 0
+        for register in self._currentSelectedGadget["dataForRegisters"]:
+            user_input_gadget = QtWidgets.QTextEdit(parent=gadget)
+            sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                                               QtWidgets.QSizePolicy.Policy.Fixed)
+            sizePolicy.setHorizontalStretch(0)
+            sizePolicy.setVerticalStretch(0)
+            sizePolicy.setHeightForWidth(user_input_gadget.sizePolicy().hasHeightForWidth())
+            user_input_gadget.setSizePolicy(sizePolicy)
+            user_input_gadget.setMaximumSize(QtCore.QSize(16777215, 30))
+            user_input_gadget.setObjectName(f"user_input_gadget_{gadgetUuid}_{index}")
+            user_input_gadget.setPlaceholderText(f"Data on Stack for register {register}")  # TODO: translations
+
+            verticalLayout.addWidget(user_input_gadget)
+            index = index + 1
+
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                           QtWidgets.QSizePolicy.Policy.Expanding)
+        verticalLayout.addItem(spacerItem)
+
+        self.scrollArea_wrapper.setWidget(self.gadget_list_wrapper)
+        self.horizontalLayout_5.addWidget(gadget)
+
+    def __exportROPChain(self):
+        ROPstring = "\n\nbufferLength=...\n" \
+                    "returnAddressOverflowValue='BBBB'\n\n" \
+                    "print('A'*bufferLength + \n" \
+                    "returnAddressOverflowValue + \n"
+        for selectedGadget in self._listOfSelectedGadgets:
+            index = 0
+            for register in selectedGadget["dataForRegisters"]:
+                userTextInput = self.gadget_list_wrapper.findChild(QtWidgets.QTextEdit,
+                                                                   f"user_input_gadget_{selectedGadget['gadgetUuid']}_{index}")
+                ROPstring += f"'{userTextInput.toPlainText()}'"
+
+                if index != len(selectedGadget["dataForRegisters"]) - 1:
+                    ROPstring += ' + \n'
+                index = index + 1
+        ROPstring += ")"
+
+        WriteToFileDialog(ROPstring)
+
+    def __removeGadgetFromChain(self):
+        for selectedGadget in self._listOfSelectedGadgets:
+            if self._currentSelectedGadget["offset"] == selectedGadget["offset"]:
+                self._listOfSelectedGadgets.remove(selectedGadget)
+                gadgetToDelete = self.gadget_list_wrapper.findChild(QtWidgets.QWidget,
+                                                                    f"gadget_{selectedGadget['gadgetUuid']}")
+                DeleteUILayout(self, gadgetToDelete)
+
+                # Disable Remove Button
+                self.removeGadgetButton.setEnabled(False)
+
+                # Disable ROPChain tab
+                if len(self._listOfSelectedGadgets) == 0:
+                    self.GadgetDetailsTabs.setTabEnabled(1, False)
+
     def _createSecondTab(self):
         # Create the second tab
         ROPChain = QtWidgets.QWidget()
         ROPChain.setObjectName("ROPChain")
+
+        verticalLayout_7 = QtWidgets.QVBoxLayout(ROPChain)
+        verticalLayout_7.setObjectName("verticalLayout_7")
+
+        frame_wrapper = QtWidgets.QFrame(parent=ROPChain)
+        frame_wrapper.setAutoFillBackground(False)
+        frame_wrapper.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        frame_wrapper.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
+        frame_wrapper.setLineWidth(0)
+        frame_wrapper.setObjectName("frame_wrapper")
+
+        verticalLayout_9 = QtWidgets.QVBoxLayout(frame_wrapper)
+        verticalLayout_9.setObjectName("verticalLayout_9")
+
+        self.scrollArea_wrapper = QtWidgets.QScrollArea(parent=frame_wrapper)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                                           QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.scrollArea_wrapper.sizePolicy().hasHeightForWidth())
+        self.scrollArea_wrapper.setSizePolicy(sizePolicy)
+        self.scrollArea_wrapper.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+        self.scrollArea_wrapper.setStyleSheet("QScrollArea { background-color:transparent; margin-bottom: 12px }")
+        self.scrollArea_wrapper.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
+        self.scrollArea_wrapper.setFrameShadow(QtWidgets.QFrame.Shadow.Plain)
+        self.scrollArea_wrapper.setWidgetResizable(True)
+        self.scrollArea_wrapper.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeading | QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
+        self.scrollArea_wrapper.setObjectName("scrollArea_wrapper")
+
+        self.gadget_list_wrapper = QtWidgets.QWidget()
+        self.gadget_list_wrapper.setGeometry(QtCore.QRect(0, 0, 1134, 260))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.gadget_list_wrapper.sizePolicy().hasHeightForWidth())
+        self.gadget_list_wrapper.setSizePolicy(sizePolicy)
+        self.gadget_list_wrapper.setObjectName("gadget_list_wrapper")
+
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.gadget_list_wrapper)
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+
+        exportGadgetChain = QtWidgets.QPushButton(parent=frame_wrapper)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(exportGadgetChain.sizePolicy().hasHeightForWidth())
+        exportGadgetChain.setSizePolicy(sizePolicy)
+        exportGadgetChain.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        exportGadgetChain.setStyleSheet("background-color: green;\n"
+                                        "color: black;")
+        exportGadgetChain.setObjectName("exportGadgetChain")
+        exportGadgetChain.setText("Export chain")  # TODO: translations
+        exportGadgetChain.clicked.connect(lambda: self.__exportROPChain())
+
+        verticalLayout_9.addWidget(self.scrollArea_wrapper)
+        verticalLayout_9.addWidget(exportGadgetChain)
+        spacerItem8 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum,
+                                            QtWidgets.QSizePolicy.Policy.Expanding)
+        verticalLayout_9.addItem(spacerItem8)
+        verticalLayout_7.addWidget(frame_wrapper)
 
         return ROPChain
 
@@ -228,17 +434,18 @@ class CreateGadgetDetailsTab:
         verticalLayout2.setObjectName("gadgetDetails_verticalLayout2")
 
         # Create the widget
-        GadgetDetailsTabs = QtWidgets.QTabWidget(parent=self._GadgetDetails_Frame)
-        GadgetDetailsTabs.setObjectName("GadgetDetailsTabs")
+        self.GadgetDetailsTabs = QtWidgets.QTabWidget(parent=self._GadgetDetails_Frame)
+        self.GadgetDetailsTabs.setObjectName("GadgetDetailsTabs")
 
         # Create the first tab
         firstTab = self._createFirstTab()
-        GadgetDetailsTabs.addTab(firstTab, ConstGadgetDetailsTabTitle)
+        self.GadgetDetailsTabs.addTab(firstTab, ConstGadgetDetailsTabTitle)
 
         # Create the first tab
         secondTab = self._createSecondTab()
-        GadgetDetailsTabs.addTab(secondTab, ConstROPChainTabTitle)
+        self.GadgetDetailsTabs.addTab(secondTab, ConstROPChainTabTitle)
+        self.GadgetDetailsTabs.setTabEnabled(1, False)
 
-        verticalLayout2.addWidget(GadgetDetailsTabs)
+        verticalLayout2.addWidget(self.GadgetDetailsTabs)
 
         return self._GadgetDetails_Frame

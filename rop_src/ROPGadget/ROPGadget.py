@@ -61,7 +61,7 @@ class ROPGadget(object):
     def append(self, instructionAddress, mnemonic, args='', bytes=None):
         if args:
             self._lines.append(
-                (instructionAddress, mnemonic + ' ' + args, mnemonic, args))  # TODO: use a variable, not an array
+                (instructionAddress, mnemonic + ' ' + args, mnemonic, args))
             self.gadget += mnemonic + ' ' + args + '; '
         else:
             self._lines.append((instructionAddress, mnemonic, mnemonic, args))

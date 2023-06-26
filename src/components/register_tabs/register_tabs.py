@@ -1,9 +1,13 @@
+import uuid
 from typing import Callable
 from PyQt6.QtWidgets import QFrame, QListWidget, QListWidgetItem
 from PyQt6 import QtCore, QtWidgets
+
+from rop_src.architecture.architecture import ARM
 from src.common.constRegisterDetails import ConstRegisters
 from src.common.constants import REGISTERS_TAB_FRAME_OBJECT_NAME, REGISTERS_TAB_WIDGET_OBJECT_NAME
 from src.enums.dataRole import DataRole
+from src.utils.common import ExtractUsedRegistersFromAssemblyCode, ExtractNeededDataForRegisters
 
 
 class CreateRegisterTabs:
@@ -14,7 +18,7 @@ class CreateRegisterTabs:
     @property
     def Registers_Frame(self):
         return self._Registers_Frame
-    
+
     @property
     def gadgetListGroupedByTabs(self) -> list[QListWidget]:
         return self._gadgetWidgetListGroupedByRegister
@@ -70,6 +74,9 @@ class CreateRegisterTabs:
                 for instructionObject in instructionList[register['name']]:
                     listItemWidget = QtWidgets.QListWidgetItem()
                     listItemWidget.setText(instructionObject["gadget"])
+                    instructionObject["gadgetUuid"] = str(uuid.uuid4())
+                    instructionObject["dataForRegisters"] = ExtractNeededDataForRegisters(
+                        instructionObject["gadget"], currentSelectedArchitecture)
                     listItemWidget.setData(DataRole.UserRole.value, instructionObject)
                     list_Widget.addItem(listItemWidget)
 

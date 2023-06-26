@@ -1,3 +1,5 @@
+from PyQt6 import QtWidgets
+
 from src.common.constRegisterDetails import ConstRegisters, ConstRegisterModificationMnemonics
 
 GadgetsGroupedByRegister: dict[str, list[dict[str, str]]] = {}
@@ -56,3 +58,10 @@ def ReadFile(filePath: str, architecture: str):
 
     sortGadgetsByLength()
     return GadgetsGroupedByRegister
+
+
+def WriteToFileDialog(fileContent: str):
+    fileName, _ = QtWidgets.QFileDialog.getSaveFileName()
+    if fileName:
+        with open(fileName, "w") as fout:
+            fout.write(fileContent)

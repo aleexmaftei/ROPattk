@@ -74,19 +74,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(9, 9, 0, 0)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.SettingsTabs = QtWidgets.QTabWidget(parent=self.Left_Frame)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred,
-                                           QtWidgets.QSizePolicy.Policy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.SettingsTabs.sizePolicy().hasHeightForWidth())
-        self.SettingsTabs.setSizePolicy(sizePolicy)
-        self.SettingsTabs.setMinimumSize(QtCore.QSize(150, 0))
-        self.SettingsTabs.setObjectName("SettingsTabs")
-        self.FilterRegisters = QtWidgets.QWidget()
-        self.FilterRegisters.setObjectName("FilterRegisters")
-        self.SettingsTabs.addTab(self.FilterRegisters, "")
-        self.horizontalLayout.addWidget(self.SettingsTabs)
         self.gridLayout_3.addWidget(self.Left_Frame, 0, 0, 1, 1)
 
         self.Right_Frame = QtWidgets.QFrame(parent=self.Central_Widget)
@@ -106,12 +93,8 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.Central_Widget)
 
         self.__retranslateUi(MainWindow)
-        self.SettingsTabs.setCurrentIndex(0)
-
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def __retranslateUi(self, MainWindow: QMainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.SettingsTabs.setTabText(self.SettingsTabs.indexOf(self.FilterRegisters),
-                                     _translate("MainWindow", "Filter"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ROPattk"))  # TODO: translations
