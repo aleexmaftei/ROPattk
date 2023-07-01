@@ -37,6 +37,9 @@ class FileService(object):
     @staticmethod
     def writeGadgetsToFile(gadgets: list[list[ROPGadget]], path: str):
         toWrite = ""
+        if not gadgets:
+            return
+
         with open(path, "w") as file:
             for gadgetsFromOpenedFile in gadgets:
                 for gadget in gadgetsFromOpenedFile:

@@ -96,8 +96,9 @@ class CreateRegisterTabs:
 
         self.verticalLayout2.addWidget(self.RegistersTabs_Widget)
 
-        # Set the first tab as startup index
-        self.RegistersTabs_Widget.setCurrentIndex(firstTabEnabled)
+        if firstTabEnabled is not None:
+            # Set the first tab as startup index
+            self.RegistersTabs_Widget.setCurrentIndex(firstTabEnabled)
 
     def CreateUITabsByArchitecture(
             self,

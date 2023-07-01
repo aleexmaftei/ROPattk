@@ -40,10 +40,14 @@ class BaseLoader(ABC):
 
     @classmethod
     def loadFileByArchitecture(cls, filePath: str, architecture: Architecture):
-        childrenClasses = BaseLoader.__subclasses__()
-        # Search if the file format is supported with implemented formats
-        for childClass in childrenClasses:
-            if childClass.isFileFormatCorrect(childClass, filePath):
-                return childClass(filePath, architecture)
+        try:
+            childrenClasses = BaseLoader.__subclasses__()
+            # Search if the file format is supported with implemented formats
+            for childClass in childrenClasses:
+                if childClass.isFileFormatCorrect(childClass, filePath):
+                    return childClass(filePath, architecture)
 
-        raise f"File {filePath} not supported"
+            raise OSError()
+        except OSError:
+            print(f"File {filePath} not supported")
+

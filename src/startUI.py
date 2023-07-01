@@ -4,12 +4,15 @@ from src.components.main_window.main_window import Ui_MainWindow
 
 
 def StartUIApplication():
-    app = QApplication(sys.argv)
+    try:
+        app = QApplication(sys.argv)
 
-    mainWindow = QMainWindow(None)
-    Ui_MainWindow(mainWindow)
+        mainWindow = QMainWindow(None)
+        Ui_MainWindow(mainWindow)
 
-    mainWindow.show()
+        mainWindow.show()
 
-    sys.exit(app.exec())
+        sys.exit(app.exec())
+    except Exception as err:
+        print("Unexpected error", repr(err))
 

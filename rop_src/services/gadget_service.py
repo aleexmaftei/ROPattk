@@ -81,26 +81,30 @@ class GadgetService(object):
         return toReturn
 
     def _searchForGadgets(self, gadgetType=GadgetType.ALL, instructionCount=5) -> list[list[ROPGadget]]:
-        foundGadgets = []
         file = FileService.file
-        executableSections = file.executableSections
-        if 0 < len(executableSections):
-            binaryContent = file.binaryContent
-            for section in executableSections:
-                gadgets = self._searchForGadgetsInSection(section, binaryContent, file.architecture, gadgetType,
-                                                          instructionCount)
-                if len(gadgets) > 0:
-                    foundGadgets.append(gadgets)
-        else:
-            raise f"No executable sections for the file {file}"
+        try:
+            foundGadgets = []
+            executableSections = file.executableSections
+            if 0 < len(executableSections):
+                binaryContent = file.binaryContent
+                for section in executableSections:
+                    gadgets = self._searchForGadgetsInSection(section, binaryContent, file.architecture, gadgetType,
+                                                              instructionCount)
+                    if len(gadgets) > 0:
+                        foundGadgets.append(gadgets)
+            else:
+                raise Exception()
 
-        return foundGadgets
+            return foundGadgets
+        except Exception:
+            print(f"No executable sections for the file {file}")
+
 
     def loadGadgets(self):
         if FileService.isFileLoaded():
             return self._searchForGadgets()
         else:
-            raise "Can not load gadgets because there is no file loaded!"
+            print("Can not load gadgets because there is no file loaded!")
 
 
 GadgetService = GadgetService()
